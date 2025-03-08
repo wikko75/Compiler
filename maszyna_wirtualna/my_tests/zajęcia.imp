@@ -1,0 +1,8 @@
+
+PROGRAM IS
+    n, INT_MAX
+BEGIN
+    INT_MAX := 9223372036854775807;
+    n := INT_MAX + INT_MAX;
+    WRITE n;
+END

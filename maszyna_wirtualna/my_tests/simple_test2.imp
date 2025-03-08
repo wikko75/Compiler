@@ -1,0 +1,20 @@
+PROCEDURE foo(T b, s) IS
+a[-10:3], c
+BEGIN
+  # s := 3;
+    c := 3;
+    b[c] := 20;
+    #a[s] := 55;
+    #WRITE a[s];
+    WRITE b[s];
+END
+
+PROGRAM IS
+  size, b[-10:3]
+BEGIN
+    size := -9;
+    b[size] := 15;
+    WRITE b[size];
+    foo(b, size);
+END
+

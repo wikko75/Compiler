@@ -1,0 +1,6 @@
+.vscode
+.venv
+*.o
+*.mr
+maszyna-wirtualna
+maszyna-wirtualna-cln

@@ -1,0 +1,10 @@
+PROGRAM IS
+    n
+BEGIN
+    READ n;
+    FOR i FROM 1 TO n DO
+        n := n-1;
+    ENDFOR
+
+    WRITE n;
+END

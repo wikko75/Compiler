@@ -1,0 +1,7 @@
+PROGRAM IS
+  a, b
+BEGIN
+    a := 10;
+   # b := a;
+END
+
