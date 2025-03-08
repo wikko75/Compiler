@@ -9,9 +9,7 @@ class MyParser(Parser):
     @_('procedures main')
     def program_all(self, p):
         for procedure in p.procedures:
-            # print(f'PROCEDURE\nHEAD:\n{procedure[0]}\nDECLARATIONS:\n {procedure[1]}\nCOMMENDS:\n {procedure[2]}')
             self.code_generator.gen_procedure(head=procedure[0], declarations=procedure[1], commands=procedure[2])
-        # print(f'MAIN:\n{p.main}')
         self.code_generator.gen(*p.main)
 
     @_('procedures PROCEDURE proc_head IS declarations BEGIN commands END')
@@ -191,10 +189,6 @@ class MyParser(Parser):
     @_('NUM')
     def value(self, p):
         return ('number', p.NUM)
-    
-    # @_('"-" identifier')
-    # def value(self, p):
-    #     return ('load', ('-', p.identifier))
     
     @_('identifier')
     def value(self, p):

@@ -54,9 +54,9 @@ TEMP_CELL_J = 9     # calculate_expression
 TEMP_CELL_K = 10    # calculate_expression
 TEMP_CELL_L = 11    # calculate_expression
 
-TEMP_CELL_M = 12     # for temporary address of variable in load_address function
-TEMP_CELL_V = 13     # for temporary address of variable in load_value function
-TEMP_CELL_V2= 14     # for temporary address of variable in load_value function
+TEMP_CELL_M = 12    # for temporary address of variable in load_address function
+TEMP_CELL_V = 13    # for temporary address of variable in load_value function
+TEMP_CELL_V2= 14    # for temporary address of variable in load_value function
 
 
 class Memory(dict):
@@ -183,7 +183,7 @@ class Procedure:
 class Generator:
     def __init__(self):
         self.debug = True
-        self.offset = 15  #since first 15 cells are reserved look: 'TEMP_CELLS_' above
+        self.offset = 15  # since first 15 cells are reserved look: 'TEMP_CELLS_' above
         self.memory = None
         self.procedures = dict()
         self.code = []
@@ -219,11 +219,8 @@ class Generator:
     def gen(self, declarations, commands):
         if len(self.code) > 0:
             self.code[0] = f'JUMP {len(self.code)}'
-        #for procedure in self.procedures:
-            #print(procedure)
+
         self.memory = Memory(self.offset)
-        #print(declarations)
-        #print(commands)
         self.gen_declarations(declarations)
         self.gen_body(commands)
         self.code.append("HALT")
@@ -248,16 +245,14 @@ class Generator:
                 except Exception as e:
                     print(f'Error: Line {declaration[4]}: {e}')
                     self.errorMode = True
-        # for name, entry in self.memory.items():
-        #     print(f'Name: {name}, {entry}')
 
     def gen_body(self, commands):
         for command in commands:
-            #print(f"Generating command: {command}")
             if command[0] == 'assign':
                 target = command[1]
                 expression = command[2]
                 self.lineno = command[3]
+               
                 try:
                     if self.memory.get_type(target[1]) == 'iterator':
                         raise Exception(f"can not modify local iterator '{target[1]}'")
@@ -302,11 +297,8 @@ class Generator:
                 self.initialize(target)
 
             elif command[0] == 'ifelse':
-                # TODO: optimize for numbers
                 condition = command[1]
-                #print(f'Condition: {condition}')
                 (condition, swap) = self.simplify_condition(condition)
-                #print(f'Simplified: {(condition, swap)}')
 
                 if not swap:
                     block_a = command[2]
@@ -314,9 +306,6 @@ class Generator:
                 else:
                     block_b = command[2]
                     block_a = command[3]
-
-                #print(f'Block A: {block_a}')
-                #print(f'Block B: {block_b}')
                 
                 self.generate_condition(condition)
 
@@ -337,10 +326,7 @@ class Generator:
             elif command[0] == 'while':
                 condition = command[1]
                 block = command[2]
-                #print(f'Condition: {condition}')
                 (condition, negation) = self.simplify_condition(condition)
-                #print(f'Simplified: {(condition, negation)}')
-                #print(f'Block: {block}')
                 
                 before_condition = len(self.code)
                 self.generate_condition(condition)
@@ -367,13 +353,9 @@ class Generator:
                         self.code[before_block] = f'JZERO {after_block - before_block}'
 
             elif command[0] == 'repeat':
-                # TODO: optimize for numbers
                 condition = command[1]
                 block = command[2]
-                #print(f'Condition: {condition}')
                 (condition, negation) = self.simplify_condition(condition)
-                #print(f'Simplified: {(condition, negation)}')
-                #print(f'Block: {block}')
 
                 block_start = len(self.code)
                 self.loopDepth += 1
@@ -396,11 +378,6 @@ class Generator:
                 end = command[3]
                 block = command[4]
 
-                # print(f'Iterator: {iterator}')
-                # print(f'Start: {start}')
-                # print(f'End: {end}')
-                # print(f'Block: {block}')
-
                 try:
                     self.memory.add_iterator(iterator)
                 except Exception as e:
@@ -408,7 +385,6 @@ class Generator:
                     self.errorMode = True
 
                 iterator_address = self.memory.get_variable(iterator)
-                #print(f'Iterator location: {iterator_address}')
 
                 # store initial values of iterator
                 if start[0] == 'number':
@@ -425,36 +401,14 @@ class Generator:
                     self.load_value(end[1])
                     self.code.append(f'STORE {iterator_address + 1}')
               
-                #print(f'Iterator END value address: {iterator_address + 1}')
-
-                # self.gen_for(iterator, start, end, type='to')
 
                 condition = ('comparison', '<=', ('load', ('iterator', iterator)), ('load', ('iterator', f'{iterator}_iter_end')) )
                 block = command[4]
-               # print(f'Condition: {condition}')
                 (condition, negation) = self.simplify_condition(condition)
-               # print(f'Simplified: {(condition, negation)}')
-                #print(f'Block: {block}')
                 
                 before_condition = len(self.code)
                 self.generate_condition(condition)
 
-                # if not negation:
-                #     before_block = len(self.code)
-                #     self.code.append('JUMP to block end')
-                #     self.loopDepth += 1
-                #     self.gen_body(block)
-
-                #     # increment iterator 
-                #     self.code.append(f'SET 1')
-                #     self.code.append(f'ADD {iterator_address}')
-                #     self.code.append(f'STORE {iterator_address}')
-
-                #     self.loopDepth -= 1
-                #     self.code.append(f'JUMP { before_condition - len(self.code) }')
-                #     after_block = len(self.code)
-                #     self.code[before_block] = f'JUMP {after_block - before_block}'
-                # else: # negation
                 before_block = len(self.code) - 1
                 self.loopDepth += 1
                 self.gen_body(block)
@@ -467,11 +421,8 @@ class Generator:
 
                 self.code.append(f'JUMP { before_condition - len(self.code)}')
                 after_block = len(self.code)
-                # if condition[1] == '>':
                 self.code[before_block] = f'JPOS {after_block - before_block}'
-                # else: # condition[0] =='='
-                #     self.code[before_block] = f'JZERO {after_block - before_block}'
-
+            
                 self.memory.delete_iterator(iterator[0])
             
             elif command[0] == 'for_downto':
@@ -480,11 +431,6 @@ class Generator:
                 end = command[3]
                 block = command[4]
 
-                # print(f'Iterator: {iterator}')
-                # print(f'Start: {start}')
-                # print(f'End: {end}')
-                # print(f'Block: {block}')
-
                 try:
                     self.memory.add_iterator(iterator)
                 except Exception as e:
@@ -492,9 +438,7 @@ class Generator:
                     self.errorMode = True
 
                 iterator_address = self.memory.get_variable(iterator)
-                # print(f'Iterator location: {iterator_address}')
 
-                # store initial values of iterator
                 if start[0] == 'number':
                     self.code.append(f'SET {start[1]}')
                     self.code.append(f'STORE {iterator_address}')
@@ -509,34 +453,14 @@ class Generator:
                     self.load_value(end[1])
                     self.code.append(f'STORE {iterator_address + 1}')
               
-                # print(f'Iterator END value address: {iterator_address + 1}')
 
                 condition = ('comparison', '>=', ('load', ('iterator', iterator)), ('load', ('iterator', f'{iterator}_iter_end')) )
                 block = command[4]
-                # print(f'Condition: {condition}')
                 (condition, negation) = self.simplify_condition(condition)
-                # print(f'Simplified: {(condition, negation)}')
-                # print(f'Block: {block}')
                 
                 before_condition = len(self.code)
                 self.generate_condition(condition)
 
-                # if not negation:
-                #     before_block = len(self.code)
-                #     self.code.append('JUMP to block end')
-                #     self.loopDepth += 1
-                #     self.gen_body(block)
-
-                #     # decrement iterator 
-                #     self.code.append(f'SET -1')
-                #     self.code.append(f'ADD {iterator_address}')
-                #     self.code.append(f'STORE {iterator_address}')
-
-                #     self.loopDepth -= 1
-                #     self.code.append(f'JUMP { before_condition - len(self.code) }')
-                #     after_block = len(self.code)
-                #     self.code[before_block] = f'JUMP {after_block - before_block}'
-                # else: # negation
                 before_block = len(self.code) - 1
                 self.loopDepth += 1
                 self.gen_body(block)
@@ -549,10 +473,7 @@ class Generator:
 
                 self.code.append(f'JUMP { before_condition - len(self.code)}')
                 after_block = len(self.code)
-                # if condition[1] == '>':
                 self.code[before_block] = f'JPOS {after_block - before_block}'
-                # else: # condition[0] =='='
-                #     self.code[before_block] = f'JZERO {after_block - before_block}'
 
                 self.memory.delete_iterator(iterator[0])
             
@@ -587,12 +508,9 @@ class Generator:
                         self.errorMode = True
                         continue
                     
-                    # fix assigning pointer arrays
                     if type == 'variable':
                         self.load_address((type, args[i]))
                     else: # type == 'array'
-                        #!Tu sie wybierdala, bo poczatkowy indeks nie musi byc 0, moze byc np. -1, 1 i bedzie out of bonds
-                        #? szybki walkaround => storuj poczatek tablicy?
                         # load and store lower bound as first memory cell of array
                         self.code.append(f'SET {self.memory.get_variable(args[i])}')
                     
@@ -854,10 +772,7 @@ class Generator:
         self.code.append(f'LOAD {dividend_address}') 
         self.code.append(f'JPOS 6')
         self.code.append(f'JZERO 5')
-        # self.code.append(f'LOAD {TEMP_CELL_L}') 
-        # self.code.append(f'SUB {TEMP_CELL_L}')
-        # self.code.append(f'SUB {TEMP_CELL_L}')
-        # self.code.append(f'STORE {TEMP_CELL_L}')
+       
         #  dividend pos
         self.code.append(f'LOAD {dividend_address}')
         self.code.append(f'SUB {dividend_address}')
@@ -949,7 +864,6 @@ class Generator:
         self.code.append(f'LOAD {TEMP_CELL_H}')
 
 
-    # TODO optimize for non pointers
     def generate_condition(self, condition):
         operator = condition[1]
         first_value = condition[2]
@@ -986,10 +900,6 @@ class Generator:
         first_value = condition[2]
         second_value = condition[3]
 
-        # print(f'Operator: {operator}')
-        # print(f'First value: {first_value}')
-        # print(f'Second value: {second_value}')
-
         if operator == '=':
             return condition, False
         elif operator == '!=':
@@ -1003,7 +913,6 @@ class Generator:
         else: # operator == '<='
             return ('comparison', '>', first_value, second_value), True
 
-    #! needs 3 temp addresses or more, need to check
     # result to accumulator
     def calculate_expression(self, expression, lineno):
         # single argument expressions:
@@ -1157,7 +1066,6 @@ class Generator:
                 pointer_address = self.memory.get_variable(memory_cell[1])
 
                 if index[0] == 'number':
-                    #! works as expected
                     # load value from first cell of array (lower_bound)
                     self.code.append(f'LOADI {pointer_address}')
                     self.code.append(f'STORE {temp_address}')
@@ -1179,7 +1087,6 @@ class Generator:
 
                     # index is pointer
                     if self.memory.is_pointer(index[1]):
-                        #! works as expected
                         self.load_value((self.memory.get_pointer_type(index[1]), index[1]))
                         # substract lower bound                        
                         self.code.append(f'SUB {temp_address}')
@@ -1191,7 +1098,6 @@ class Generator:
 
                     # simple variable / iterator
                     else:
-                        #! works as expected
                         self.load_value((self.memory.get_type(index[1]), index[1]))
                         # substract lower bound                        
                         self.code.append(f'SUB {temp_address}')
@@ -1209,7 +1115,6 @@ class Generator:
                 else: # index[0] == 'load'
 
                     if self.memory.is_pointer(index[1]):
-                        #! works as expected
                         array_address = self.memory.get_array_at_index(memory_cell[1], 0, get_array_start_location=True)
                         # load and store lower bound of array
                         self.code.append(f'LOAD {array_address}')
@@ -1223,7 +1128,6 @@ class Generator:
                         self.code.append(f'SET {array_address + 1}')
                         self.code.append(f'ADD {temp_address}')
                     else:
-                        #! works as expected
                         # get start address of array in memory
                         array_address = self.memory.get_array_at_index(memory_cell[1], 0,  get_array_start_location=True)
                         # first load and store array's !lower bound value!
@@ -1280,11 +1184,10 @@ class Generator:
                 pointer_address = self.memory.get_variable(memory_cell[1])
 
                 if index[0] == 'number':
-                    #! works as expected
                     # first load and store array's !lower bound value!
                     self.code.append(f'LOADI {pointer_address}')
                     self.code.append(f'STORE {temporary_address}')
-                    self.load_value(index)  #! check for pointers
+                    self.load_value(index)
                     # substract lower bond
                     self.code.append(f'SUB {temporary_address}')
                     self.code.append(f'STORE {temporary_address}')
@@ -1299,7 +1202,6 @@ class Generator:
                 else: # index[0] == 'load'
                     # index is pointer
                     if self.memory.is_pointer(index[1]):
-                        #! works as expected
                         # first load and store array's !lower bound value!
                         self.code.append(f'LOADI {pointer_address}')
                         self.code.append(f'STORE {temporary_address}')
@@ -1316,8 +1218,7 @@ class Generator:
                         self.code.append(f'ADD {temporary_address}')
                         self.code.append(f'LOADI 0')
                     else: # simple variable / iterator
-                        #! works as expected
-                         # first load and store array's !lower bound value!
+                        # first load and store array's !lower bound value!
                         self.code.append(f'LOADI {pointer_address}')
                         self.code.append(f'STORE {temporary_address}')
                         # load value of offset value pointer
@@ -1344,7 +1245,6 @@ class Generator:
                     
                     # pointer
                     if self.memory.is_pointer(index[1]):
-                        #! works as expected
                         # first load and store array's !lower bound value!
                         self.code.append(f'LOAD {array_address}')
                         self.code.append(f'STORE {temporary_address}')
@@ -1360,8 +1260,6 @@ class Generator:
                         self.code.append(f'LOADI 0')
                     
                     else: # simple variable / iterator                        
-                        #! Works as expected
-                        # load proper address to acc
                         # first load and store array's !lower bound value!
                         self.code.append(f'LOAD {array_address}')
                         self.code.append(f'STORE {temporary_address}')

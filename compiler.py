@@ -2,7 +2,6 @@ import sys
 from lexer import MyLexer
 from parser import MyParser
 
-
 if __name__ == '__main__':
     if len(sys.argv) < 3:
         print(f'Usage: python <input_program> <out_compiled_program>')
@@ -11,9 +10,7 @@ if __name__ == '__main__':
     with open(sys.argv[1], 'r') as input_file:
         source_code = input_file.read()
 
-        # print(f'Input code:\n{source_code}')
-
-        lexer = MyLexer()
+        lexer  = MyLexer()
         parser = MyParser()
         parser.parse(lexer.tokenize(source_code))
         
